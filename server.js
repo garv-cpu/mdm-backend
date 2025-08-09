@@ -11,37 +11,24 @@ const devices = new Map();
 const customers = new Map();
 
 app.post("/api/devices/generate-qr", async (req, res) => {
-  try {
-    const { deviceId } = req.body;
-    if (!deviceId) {
-      return res.status(400).json({ error: "Please provide a device ID" });
-    }
-    if (devices.has(deviceId)) {
-      return res.status(400).json({ error: "Device already registered" });
-    }
+  const { deviceId } = req.body;
+  if (!deviceId)
+    return res.status(400).json({ error: "Please provide a device ID" });
+  if (devices.has(deviceId))
+    return res.status(400).json({ error: "Device already registered" });
 
-    const token = jwt.sign({ deviceId }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
+  const token = jwt.sign({ deviceId }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+  devices.set(deviceId, {
+    deviceId,
+    token,
+    status: "pending",
+    customerId: null,
+  });
 
-    // Only store token in QR
-    const qrCodeUrl = await QRCode.toDataURL(token, {
-      errorCorrectionLevel: "L",
-    });
-
-    devices.set(deviceId, {
-      deviceId,
-      token,
-      status: "pending",
-      customerId: null,
-    });
-    res.json({ qrCodeUrl, deviceId });
-  } catch (err) {
-    console.error("Error generating QR code:", err);
-    res
-      .status(500)
-      .json({ error: "Something went wrong. Please try again later." });
-  }
+  // send just token, not image
+  res.json({ qrData: token, deviceId });
 });
 
 app.post("/api/devices/enroll", async (req, res) => {
