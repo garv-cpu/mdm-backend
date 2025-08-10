@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import QRCode from 'qrcode';
 import jwt from 'jsonwebtoken';
+import cron from 'node-cron';
 
 dotenv.config();
 const app = express();
@@ -9,6 +10,12 @@ app.use(express.json());
 
 const devices = new Map();
 const customers = new Map();
+
+// Add cron job here - runs every 5 minutes
+cron.schedule('*/5 * * * *', () => {
+  console.log('Server is alive and running at', new Date().toISOString());
+  // Add any periodic task here if you want
+});
 
 app.post('/api/devices/generate-qr', async (req, res) => {
   try {
